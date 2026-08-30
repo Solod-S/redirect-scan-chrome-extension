@@ -7,11 +7,16 @@ const rootDir = process.cwd();
 const distDir = path.join(rootDir, 'dist');
 const releaseDir = path.join(rootDir, 'release');
 
-// 1. Build dist first
+// 1. Generate icons & promo banner
+console.log('🎨 Generating icons and promo assets...');
+execSync('python3 scripts/generate_icons.py', { stdio: 'inherit' });
+execSync('node scripts/generate-banner.js', { stdio: 'inherit' });
+
+// 2. Build dist
 console.log('📦 Building production bundle...');
 execSync('npm run build', { stdio: 'inherit' });
 
-// 2. Ensure release directory exists
+// 3. Ensure release directory exists
 fs.mkdirSync(releaseDir, { recursive: true });
 
 // Read version from package.json

@@ -1,76 +1,148 @@
-# Redirect Scan — HTTP Redirect & Header Checker
+# Redirect Scan
 
-> **Redirect Scan** is a fast, accurate, privacy-first Google Chrome Extension (Manifest V3) for technical SEO specialists, web developers, webmasters, and QA engineers. It records and inspects HTTP redirect chains, response headers, server metadata, and client-side redirects directly in your browser.
+<div align="center">
 
----
-
-## 🌟 Features
-
-* **Complete HTTP Redirect Chains:** Real-time capture of `301`, `302`, `303`, `307`, and `308` redirect hops.
-* **Final Status & Errors:** Instant reporting of `200 OK`, `4xx` client errors (`404`, `410`, `429`), `5xx` server errors (`500`, `502`, `503`, `504`), and browser network errors (`ERR_TOO_MANY_REDIRECTS`, `ERR_CONNECTION_REFUSED`).
-* **Client-Side Redirect Tracking:** Best-effort detection of `<meta http-equiv="refresh">` tags (with delay) and client-side navigations.
-* **Grouped HTTP Response Headers:**
-  * **SEO / Crawling:** `Location`, `X-Robots-Tag`, `Link`, `Content-Language`, `Canonical`
-  * **Caching:** `Cache-Control`, `Expires`, `ETag`, `Last-Modified`, `Age`, `Vary`, `CF-Cache-Status`
-  * **Security:** `HSTS`, `CSP`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`
-  * **Server:** `Server`, `Via`, `X-Powered-By`, `Server IP`, `From Cache`
-  * **All Headers:** Alphabetically sorted with real-time search filtering.
-* **Smart SEO & Technical Rules Engine:**
-  * Long redirect chain warning ($\ge 3$ redirects)
-  * Redirect loop detection ($A \rightarrow B \rightarrow A$ or excessive redirects)
-  * Protocol transitions: HTTP $\rightarrow$ HTTPS upgrades and HTTPS $\rightarrow$ HTTP security downgrades
-  * Cross-domain redirect detection
-  * Stripped / lost URL query parameters (e.g. `utm_*` marketing tags)
-  * Canonical hostname (`www`) and trailing slash adjustments
-* **Toolbar Badge:** Instant visual feedback with status codes (`301`, `404`, `500`, `CR`), colors, and detailed tooltips.
-* **Export & Trace Tools:**
-  * **Copy URL:** Copy individual step or destination URLs.
-  * **Copy Chain:** Copy concise plain text redirect path.
-  * **Copy Full Report:** Copy comprehensive technical audit report.
-  * **Reload & Trace:** Clear tab state and re-trace the entire navigation lifecycle from the beginning.
-  * **Refresh Data:** Resynchronize state with background service worker without reloading the page.
+[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Extension-blue.svg?logo=googlechrome&logoColor=white)](https://chrome.google.com/webstore)
+[![Manifest V3](https://img.shields.io/badge/Manifest-V3-success.svg)](https://developer.chrome.com/docs/extensions/mv3/intro/)
+[![React 19](https://img.shields.io/badge/React-19-61dafb.svg?logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Bundler-Vite-646cff.svg?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Privacy: 100% Client-Side](https://img.shields.io/badge/Privacy-100%25%20Local-10b981.svg)](#-privacy--security)
 
 ---
 
-## 🔍 How Redirect Tracking Works
+### Fast, lightweight, and 100% private in-browser Chrome extension for inspecting HTTP redirect chains, status codes, response headers, and client-side redirects.
 
-### Server-Side Redirects
-Redirect Scan uses `chrome.webRequest` events (`onBeforeRequest`, `onBeforeRedirect`, `onResponseStarted`, `onCompleted`, `onErrorOccurred`) filtered strictly to `main_frame` navigations. When the browser receives a `3xx` redirect, `onBeforeRedirect` captures the source URL, destination `Location`, status code, status line, IP address, cache status, and response headers.
+</div>
 
-### Client-Side Redirects
-1. **Meta Refresh:** A lightweight content script runs at `document_start` to scan the DOM `<head>` for `<meta http-equiv="refresh">` tags and monitors dynamic DOM modifications via `MutationObserver`. When detected, it messages the background service worker.
-2. **Client Navigation:** The extension monitors `chrome.webNavigation.onCommitted` for `client_redirect` transition qualifiers. When paired with a pending Meta Refresh, it correlates them into a single deduplicated client redirect step.
+<br />
 
----
+![Redirect Scan Hero](store/assets/promo_marquee_1400x560.png)
 
-## 🔒 Privacy Principle
-
-* **100% Local Execution:** All network analysis and rule evaluations are executed locally within your browser.
-* **No Telemetry / No Backend:** No visited URLs, headers, IP addresses, or chains are ever uploaded to remote servers.
-* **Main Frame Only:** Background subresource requests (images, stylesheets, scripts, tracking pixels, ads) are intentionally excluded.
-* **Zero Request Header / Cookie Collection:** Request cookies and `Authorization` credentials are never captured.
-* **Session Lifetime:** Navigation state is maintained per tab in `chrome.storage.session` and memory. It is automatically purged when the tab is closed or Chrome is restarted.
+<br />
 
 ---
 
-## 🛡️ Permissions
+## 🚀 Key Highlights
 
-| Permission | Purpose |
-| :--- | :--- |
-| `webRequest` | Observes top-level HTTP/HTTPS responses and status codes. *(Non-blocking)* |
-| `webNavigation` | Detects transition qualifiers (`client_redirect`) and navigation lifecycles. |
-| `storage` | Utilizes `chrome.storage.session` to persist tab redirect state during service worker lifecycle. |
-| `host_permissions` | Required to observe redirects across websites before the popup is opened. |
+- ⚡ **Complete HTTP Redirect Chain Capture**: Observes real-time top-level navigations before the popup is even opened, capturing `301`, `302`, `303`, `307`, and `308` redirect hops.
+- 🎯 **Final Response & Error Diagnostics**: Instant detection of `200 OK`, `4xx` client errors (`404 Not Found`, `410 Gone`, `429 Too Many Requests`), `5xx` server errors (`500`, `502`, `503`, `504`), and browser network errors (`ERR_TOO_MANY_REDIRECTS`, `ERR_NAME_NOT_RESOLVED`).
+- 🔄 **Client-Side Redirect & Meta Refresh Tracking**: Early DOM scanning at `document_start` + `MutationObserver` to identify `<meta http-equiv="refresh">` tags (with delay and destination) and `webNavigation` client-side transitions.
+- 📑 **Grouped HTTP Response Headers**: Structured breakdown into **SEO / Crawling** (`Location`, `X-Robots-Tag`, `Link`, `Canonical`), **Caching** (`Cache-Control`, `Expires`, `ETag`, `Age`, `CF-Cache-Status`), **Security** (`HSTS`, `CSP`, `X-Frame-Options`), and **Server** (`Server`, `IP`, `From Cache`), plus full search across all headers.
+- 🌐 **Server IP & Caching Diagnostics**: Displays actual server IP addresses and cached status (`fromCache`) as provided directly by Chrome.
+- 🛡️ **Intelligent SEO & Technical Rules Engine**:
+  - ⚠️ Long redirect chain alerts ($\ge 3$ hops)
+  - 🚨 Redirect loop detection ($A \rightarrow B \rightarrow A$ and browser loop errors)
+  - 🔒 Protocol checks (HTTP $\rightarrow$ HTTPS security upgrade vs. HTTPS $\rightarrow$ HTTP insecure downgrade)
+  - 🌍 Domain migrations (Cross-domain redirects)
+  - 🏷️ Stripped or lost URL query parameters (e.g. `utm_*` marketing tags)
+  - 🔀 Canonical hostname (`www`) adjustments and trailing slash normalizations
+- 🏷️ **Dynamic Toolbar Badge**: Real-time toolbar icon badge indicating first redirect code (`301`), error status (`404`, `500`), client redirect (`CR`), or clearing automatically on clean `200 OK` pages.
+- 📋 **One-Click Export Tools**: Fast copy for individual URLs, concise plaintext redirect paths, and comprehensive technical audit reports formatted for Slack, Notion, Jira, or GitHub issues.
+- 🔄 **Reload & Trace**: One-click hard reload bypassing browser cache to capture and trace the entire redirect lifecycle from the initial request.
+- 🛡️ **100% Private & Zero-Server**: Runs entirely inside your browser with **Zero External APIs**, **Zero Telemetry**, **Zero History Retention**, and **Zero Cookie/Auth Collection**.
 
 ---
 
-## ⚙️ Tech Stack & Architecture
+## 📂 Feature & Diagnostic Matrix
 
-* **Chrome Extension:** Manifest V3
-* **Frontend UI:** React 19, CSS Modules / scoped CSS, `lucide-react`
-* **Build System:** Vite 6 / ES2022+ (Zero TypeScript)
-* **Testing:** Vitest 3, React Testing Library, JSDOM
-* **Storage:** `TabRedirectStore` with in-memory caching and `chrome.storage.session`
+| Module / Feature | Inspected Signals | Checks & Heuristics |
+| :--- | :--- | :--- |
+| **HTTP Redirects (3xx)** | `301`, `302`, `303`, `307`, `308` | Full chain order, multi-hop latency warning, multiple temporary redirects warning. |
+| **Final HTTP Status** | `200`, `4xx`, `5xx`, Status Line | `200 OK` confirmation, `404 Not Found`, `410 Gone`, `429 Rate Limit`, `500/502/503/504` errors. |
+| **Client Redirects** | `<meta http-equiv="refresh">`, `client_redirect` | Meta Refresh delay & destination, client-side transition evidence, deduplication. |
+| **Protocol Transitions** | `http:` vs `https:` schemes | HTTP $\rightarrow$ HTTPS (Passed/Secure), HTTPS $\rightarrow$ HTTP (Security Warning). |
+| **Domain & Host** | `from.hostname` vs `to.hostname` | Cross-domain redirect detection, canonical `www` prefix additions / removals. |
+| **Path & Query Params** | `pathname`, `searchParams` | Trailing slash normalization, stripped query parameters (e.g. `utm_*`, tracking IDs). |
+| **Loops & Excessive Hops** | Visited URLs set, `ERR_TOO_MANY_REDIRECTS` | Circular loop detection ($A \rightarrow B \rightarrow A$), long chain warning ($\ge 3$ redirects). |
+| **Response Headers** | `responseHeaders` (Case-insensitive) | Categorized into SEO, Caching, Security, Server, and All Headers with real-time search. |
+| **Server & Connection** | `details.ip`, `fromCache`, `Server` | Server IP display (IPv4/IPv6), cache hit indicator, web server software identification. |
+
+---
+
+## 📸 Screenshots & Visual Overview
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="50%">
+        <strong>Redirect Waterfall & Path Trace</strong><br /><br />
+        <img src="assets/screenshots/screenshot-path.png" alt="Path Tab" width="100%" style="border-radius: 6px;" />
+      </td>
+      <td align="center" width="50%">
+        <strong>Technical & SEO Issues Tab</strong><br /><br />
+        <img src="assets/screenshots/screenshot-issues.png" alt="Issues Tab" width="100%" style="border-radius: 6px;" />
+      </td>
+    </tr>
+  </table>
+</div>
+
+---
+
+## 🏗️ Architecture & Project Structure
+
+```text
+redirect-scan/
+├── public/
+│   ├── manifest.json              # Chrome Extension Manifest V3
+│   └── icons/                     # Vector-generated icons (16, 32, 48, 128)
+│
+├── src/
+│   ├── background/
+│   │   ├── service-worker.js      # SW entry point (top-level event registration)
+│   │   ├── registerWebRequest.js  # main_frame webRequest listeners
+│   │   ├── registerWebNavigation.js # Navigation transition & qualifier listeners
+│   │   ├── registerTabs.js        # Tab lifecycle & automatic cleanup
+│   │   ├── registerMessages.js    # Runtime messaging handler
+│   │   └── badgeController.js     # Toolbar badge text & color controller
+│   │
+│   ├── tracking/
+│   │   ├── navigationTracker.js   # Navigation lifecycle & chain continuation
+│   │   ├── chainBuilder.js        # Step aggregator & state builder
+│   │   ├── clientRedirectTracker.js # Meta Refresh & client_redirect correlation
+│   │   └── redirectMatcher.js     # Hop correlation & fuzzy URL matching
+│   │
+│   ├── storage/
+│   │   └── tabRedirectStore.js    # In-memory cache + chrome.storage.session
+│   │
+│   ├── content/
+│   │   ├── meta-refresh-detector.js # Self-contained document_start content script
+│   │   └── parseMetaRefresh.js    # Meta Refresh content parser
+│   │
+│   ├── rules/
+│   │   ├── redirectRulesEngine.js # Rules orchestrator & severity sorter
+│   │   ├── statusRules.js         # HTTP status code heuristics
+│   │   ├── chainRules.js          # Chain length & loop detection
+│   │   ├── protocolRules.js       # Protocol upgrade/downgrade checks
+│   │   └── urlRules.js            # URL transform & query stripping rules
+│   │
+│   ├── popup/
+│   │   ├── App.jsx                # Root popup UI
+│   │   ├── popup.css              # Pro Developer Tools Light Theme design system
+│   │   ├── components/            # Header, Summary, Tabs, Cards, Badges, Toast
+│   │   ├── sections/              # PathSection, HeadersSection, IssuesSection
+│   │   ├── hooks/                 # useTabRedirectState, useClipboard
+│   │   └── utils/                 # reportFormatter, headerUtils, urlUtils
+│   │
+│   └── shared/
+│       ├── constants.js           # Shared constants & badge colors
+│       ├── statusCodes.js         # HTTP status codes & descriptions dictionary
+│       ├── headerUtils.js         # Case-insensitive header grouping
+│       └── urlUtils.js            # URL comparison & formatting helpers
+│
+├── dev-server/
+│   └── server.js                  # Local Node.js test server with 18+ scenarios
+│
+├── tests/                         # Vitest + Testing Library unit test suite
+├── store/                         # Chrome Web Store submission assets & descriptions
+│   ├── assets/
+│   │   └── promo_marquee_1400x560.png # Promo Marquee Banner
+│   ├── store_listing.md           # All-in-one store listing kit
+│   ├── description.md             # Detailed store description
+│   ├── privacy.md                 # Privacy policy
+│   └── permissions.md             # Permissions justification
+└── scripts/                       # Packaging, icon and banner generation scripts
+```
 
 ---
 
@@ -81,56 +153,54 @@ Redirect Scan uses `chrome.webRequest` events (`onBeforeRequest`, `onBeforeRedir
 npm install
 ```
 
-### 2. Run Unit Tests
+### 2. Run Automated Test Suite
 ```bash
 npm test
 ```
+*(Runs 40+ unit and component tests covering chain building, rules engine, header grouping, Meta Refresh parsing, badge controller, and UI components).*
 
-### 3. Start Local Test Server
-Run the dev test server offering various redirect and status scenarios:
+### 3. Launch Local Test Server
 ```bash
 npm run test:server
 ```
-Visit `http://localhost:3000` to test 301, 302, 303, 307, 308, 404, 500, Meta Refresh, JS redirects, and loops.
+Runs a local Node.js test server on `http://localhost:3000` with preconfigured test scenarios:
+- **3xx Redirects**: `/301-to-200`, `/302-to-200`, `/301-302-200`, `/303`, `/307`, `/308`
+- **Error Codes**: `/404`, `/410`, `/429`, `/500`, `/502`, `/503`, `/504`
+- **Client Redirects**: `/meta-refresh`, `/js-redirect`
+- **Loops & Headers**: `/redirect-loop-a`, `/headers`
 
 ### 4. Build Production Bundle
 ```bash
 npm run build
 ```
-The compiled unpacked extension will be generated in `dist/`.
+Compiles production assets into `dist/`.
 
-### 5. Create Distribution ZIP
+### 5. Create Distribution ZIP Archive
 ```bash
 npm run package
 ```
-Generates `release/redirect-scan-v1.0.0.zip`.
+Generates `release/redirect-scan-v1.0.0.zip` ready for Chrome Web Store upload.
 
 ---
 
-## 📥 Loading Unpacked Extension in Chrome
+## 📥 Loading in Google Chrome
 
-1. Open Google Chrome and navigate to `chrome://extensions`.
-2. Enable **Developer mode** using the toggle switch in the top right corner.
-3. Click the **Load unpacked** button.
-4. Select the `dist` folder located in this repository.
-5. The **Redirect Scan** icon will appear in your Chrome toolbar.
-
----
-
-## ⚠️ Known Limitations
-
-1. **Pre-installation Navigations:** Redirect Scan can only capture redirect chains for navigations observed while the extension is active. Use **Reload & Trace** if a page was already opened prior to loading the extension.
-2. **Client-Side Redirect Mechanism:** While `Meta Refresh` tags can be identified explicitly, generic client-side redirects (`client_redirect`) indicate that a script or user agent navigation took place without decompiling the specific inline JavaScript code.
-3. **Server IP Availability:** Chrome exposes `details.ip` depending on DNS and socket connection properties. If Chrome does not provide an IP, "Not available" is displayed without performing third-party DNS queries.
-4. **Top-Level Navigations Only:** Version 1.0 focuses strictly on `main_frame` documents to maximize privacy and performance.
+1. Navigate to `chrome://extensions/` in Google Chrome.
+2. Toggle on **Developer mode** in the upper-right corner.
+3. Click **Load unpacked** and select the [`dist/`](dist/) folder.
+4. Open any website or `http://localhost:3000` to inspect live redirect paths!
 
 ---
 
-## 🗺️ Roadmap (P1 / P2)
+## 🔒 Privacy & Security
 
-* [ ] **P1:** Export redirect chains and reports as JSON.
-* [ ] **P1:** Response timing breakdown (TTFB / redirect latency).
-* [ ] **P1:** Configurable long-chain threshold and badge customization in options page.
-* [ ] **P1:** Context-menu quick copy for active link redirect trace.
-* [ ] **P2:** Bulk URL checker and CSV import.
-* [ ] **P2:** Site-wide redirect crawler.
+* **Local Processing Only**: Redirect Scan operates 100% on the client side. No data is ever transmitted to remote servers.
+* **Top-Level Navigation Only**: Only `main_frame` documents are inspected. Background subresources (images, scripts, styles, tracking pixels, iframes) are never captured.
+* **No Request Cookies or Authorization Headers**: Sensitive authentication credentials and cookies are excluded.
+* **Ephemeral Session Storage**: Redirect state is kept temporarily in `chrome.storage.session` and memory. It is automatically discarded when a tab is closed or Chrome is restarted.
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
